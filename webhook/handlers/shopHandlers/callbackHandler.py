@@ -19,8 +19,9 @@ async def HandleCallback(bot: TelegramBot, query: CallbackQuery):
         args = []
 
     p = await Partner.afirst(tgId = query.from_user.id, shop_id=bot.shop_id)
+
     if p and ROLE_LEVELS[Role(p.role)] >= ROLE_LEVELS[action.role]:
-        await action.Action(bot, query, args)
+        await action.Action(bot, query, p, args)
     else:
         await bot.sendMessageAsync(query.chat.id, "У вас нет прав")
     return
@@ -28,11 +29,6 @@ async def HandleCallback(bot: TelegramBot, query: CallbackQuery):
 def RegisterActions():
     global actions
     actions = {
-        AddressAdd.data : AddressAdd,
-        AddressSelectCity.data : AddressSelectCity,
-        AddressSelectArea.data : AddressSelectArea,
-        AddressSelectProduct.data : AddressSelectProduct,
-        AddressSelectPack.data : AddressSelectPack,
-        AddressSendInput.data : AddressSendInput,
+
     }
     return

@@ -1,11 +1,25 @@
 from django.db import models
+from ..decorator import async_model_decorator
+
+from ..shop.shopModels import Partner
 
 class PaymentType(models.TextChoices):
     PAYMENT = 'PAYMENT', 'Payment'
     FUNDING = 'FUNDING', 'Funding'
     COMPENSATION = 'COMPENSATION', 'Compensation'
 
+class Cryptocurrency(models.TextChoices):
+    BTC = 'BTC', 'BTC'
+    LTC = 'LTC', 'LTC'
+
 class AddBalance(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     type = models.CharField(max_length=64, choices=PaymentType.choices)
     source = models.CharField(max_length=1024)
+
+@async_model_decorator
+class Wallet(models.Model):
+    title = models.CharField(max_length=64, choices=Cryptocurrency.choices)
+    publicKey = models.CharField(max_length=1024)
+    privateKey = models.CharField(max_length=1024)
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE)

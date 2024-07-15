@@ -15,9 +15,10 @@ async def HandleMessage(bot: TelegramBot, mes: Message):
             await p.asave()
         
         if p and ROLE_LEVELS[Role(p.role)] >= ROLE_LEVELS[action.role]:
-            await action.Action(bot, mes)
+            await action.Action(bot, mes, p)
         else:
             await bot.sendMessageAsync(mes.chat.id, "У вас нет прав")
+
     else:
         next = bot.getNextHandler(mes.from_user.id)
         bot.resetNextHandler(mes.from_user.id)
@@ -31,14 +32,13 @@ def RegisterCommands():
     global commands 
     commands = {
         StartCommand.command : StartCommand,
+        MenuStart.command: MenuStart,
     }
     return
 
 def RegisterInputHandlers():
-    from .actions.inputActions import AddressHandler
-    
     global inputHandlers 
     inputHandlers = {
-        AddressHandler.name : AddressHandler,
+
     }
     return
