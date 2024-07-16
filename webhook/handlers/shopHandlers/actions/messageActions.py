@@ -11,7 +11,7 @@ class StartCommand:
 
     role = Role.DEFAULT
 
-    replyButtons = ReplyKeyboardMarkup([[KeyboardButton(replyCommand, ShopView.data)]], True)
+    replyButtons = ReplyKeyboardMarkup([[KeyboardButton(replyCommand)]], True)
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Магазин", ShopView.data)]])
 
     async def SendProfile(bot: TelegramBot, msg: Message, p: Partner):

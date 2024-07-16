@@ -8,7 +8,7 @@ pattern = r"(([^_]+)_([^_]+))_(.*)"
 actions = {}
 
 async def HandleCallback(bot: TelegramBot, query: CallbackQuery):
-    action = next((v for k, v in actions.items() if query.data.startswith(k)), {}) #todo: regex for get args?
+    action = next((v for k, v in actions.items() if query.data.startswith(k)), {})
     if not action:
         return
     
@@ -29,6 +29,9 @@ async def HandleCallback(bot: TelegramBot, query: CallbackQuery):
 def RegisterActions():
     global actions
     actions = {
-
+        ShopSelectCity.data: ShopSelectCity,
+        ShopView.data: ShopView,
+        ShopProductInfo.data: ShopProductInfo,
+        ShopSelectProduct.data: ShopSelectProduct,
     }
     return

@@ -56,6 +56,15 @@ class Partner(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=20, decimal_places=2, default=0) #usd <- btc/ltc 
 
+    async def saveAsync(self):
+        await self.asave()
+
+        from ..payment.models import Wallet, Cryptocurrency
+        wallet = await Wallet.afirst(partner_id=self.id)
+        if wallet is None:
+            await Wallet().createForPartnerAsync(self, Cryptocurrency.BTC)
+            #todo LTC
+
 @async_model_decorator
 class Area(models.Model):
     title = models.CharField(max_length=256)

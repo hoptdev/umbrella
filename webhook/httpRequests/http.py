@@ -8,8 +8,8 @@ async def getAsync(url):
     response = await client.get(url)
     return response.json()
 
-async def postAsync(url, data):
-    response = await client.post(url, data=data)
+async def postAsync(url, data, files=None):
+    response = await client.post(url, data=data, files=files)
     return response.json()
 
 def post(url, data):

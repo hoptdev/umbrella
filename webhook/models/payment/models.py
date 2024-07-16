@@ -2,6 +2,7 @@ from django.db import models
 from ..decorator import async_model_decorator
 
 from ..shop.shopModels import Partner
+from ...handlers.paymentHandler.btcHelper import *
 
 class PaymentType(models.TextChoices):
     PAYMENT = 'PAYMENT', 'Payment'
@@ -23,3 +24,15 @@ class Wallet(models.Model):
     publicKey = models.CharField(max_length=1024)
     privateKey = models.CharField(max_length=1024)
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
+
+    async def createForPartnerAsync(self, partner, type : Cryptocurrency):
+        self.title = type
+        self.partner = partner
+        if type is Cryptocurrency.BTC:
+            data = getKey()
+            self.publicKey = data[0]
+            self.privateKey = data[1]
+
+            await self.asave()
+        else:
+            pass #todo ltc

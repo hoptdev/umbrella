@@ -12,7 +12,7 @@ async def HandleMessage(bot: TelegramBot, mes: Message):
         p = await Partner.afirst(tgId = mes.from_user.id, shop_id=bot.shop_id)
         if not p:
             p = Partner(title=mes.from_user.first_name, tgId=mes.from_user.id, tgLogin=mes.from_user.username, shop_id=bot.shop_id)
-            await p.asave()
+            await p.saveAsync()
         
         if p and ROLE_LEVELS[Role(p.role)] >= ROLE_LEVELS[action.role]:
             await action.Action(bot, mes)

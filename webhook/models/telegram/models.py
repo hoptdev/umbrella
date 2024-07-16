@@ -2,7 +2,11 @@ from django.db import models
 from webhook.httpRequests.http import getAsync, postAsync, post
 import json
 from ..shop.shopModels import Shop
+from .updateModels import *
 from json import JSONEncoder
+import aiofiles
+import mimetypes
+from typing import Union
 
 class InlineKeyboardButton:
     def __init__(self, text, callback_data):
@@ -20,7 +24,7 @@ class InlineKeyboardMarkup:
         return json.dumps(self, default=lambda o: o.__dict__)
     
 class KeyboardButton:
-    def __init__(self, text, callback_data):
+    def __init__(self, text):
         self.text = text
 
     def toJson(self):
@@ -34,6 +38,14 @@ class ReplyKeyboardMarkup:
     def toJson(self):
         return json.dumps(self, default=lambda o: o.__dict__)
 
+class InputMediaPhoto:
+    def __init__(self, media, caption=None):
+        self.type = "photo"
+        self.media = media
+        self.caption = caption
+
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
 
 class Type(models.TextChoices):
     ShopBot = 'ShopBot', 'ShopBot'
@@ -82,8 +94,8 @@ class TelegramBot(models.Model):
     async def sendGet(self, method):
         return await getAsync(f'{self.getURL()}{method}')
     
-    async def sendPost(self, method, data):
-        return await postAsync(f'{self.getURL()}{method}', data)
+    async def sendPost(self, method, data, files=None):
+        return await postAsync(f'{self.getURL()}{method}', data, files)
 
     async def getMeAsync(self):
         return await self.sendGet("getme")
@@ -93,8 +105,51 @@ class TelegramBot(models.Model):
         return await self.sendPost("answerCallbackQuery", data)
     
     async def sendMessageAsync(self, chatId, text, reply_markup = None):
+        if reply_markup is not None and isinstance(reply_markup, list):
+            reply_markup = InlineKeyboardMarkup(reply_markup)
+
         data = {'chat_id': chatId, 'text': text, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
         return await self.sendPost("sendMessage", data)
+    
+    async def sendMediaGroup(self, data, files):
+        return await self.sendPost("sendMediaGroup", data, files)
+    
+    async def sendPhoto(self, data, files):
+        return await self.sendPost("sendPhoto", data,files)
+    
+    async def sendMessageWithPhotoAsync(self, chatId, text, photoPath: list, reply_markup = None):
+        import os
+        if len(photoPath) <= 1:
+            photo = photoPath[0]
+            photo = os.getcwd() + photo
+
+            files = {'photo': open(photo, 'rb')}
+            data = {'chat_id': chatId, 'caption': text, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
+            return await self.sendPhoto("sendPhoto", data, files)
+        else:
+            media = []
+            files = {}
+            for i, path in enumerate(photoPath):
+                media.append({
+                    "type": "photo",
+                    "media":f"attach://photo-{i}"
+                    })
+                files[f'photo-{i}'] = open(os.getcwd() + path, 'rb')
+
+            media[0]["caption"] = text
+            data = {'chat_id': chatId, 'media': json.dumps(media)}
+            res = await self.sendMediaGroup(data, files)
+            
+            """ todo: close command
+            messages = []
+            for item in res['result']:
+                messages.append(str(item['message_id']))
+            
+            data = {'chat_id': chatId, 'message_id': messages[0], 'caption': f"{text}\n\nЧтобы закрыть, нажмите: /close_{'_'.join(messages)}", 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
+            res = await self.sendPost("editMessageCaption", data) 
+            """
+            return res
+
     
     def setWebhook(self):
         data = {'url': 'https://db09-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'}
