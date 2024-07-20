@@ -63,10 +63,10 @@ class ShopSelectProduct:
         for pack in packs:
             packVisible = await ShopSelectProduct.AddressesExistsAsync(pack.id)
             if packVisible:
-                buttons.append(InlineKeyboardButton(f"{pack.size} | Moment | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_moment"))
+                buttons.append([InlineKeyboardButton(f"{pack.size} | Moment | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_moment")])
             elif pack.preorder:
-                buttons.append(InlineKeyboardButton(f"{pack.size} | PreOrder | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_preorder"))
-        await bot.sendMessageAsync(c.chat.id, "Выберите фасовку:", buttons) 
+                buttons.append([InlineKeyboardButton(f"{pack.size} | PreOrder | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_preorder")])
+        await bot.sendMessageAsync(c.chat.id, "Выберите фасовку:", InlineKeyboardMarkup(buttons)) 
 
 class ShopSelectPack:
     data = "shop_selectPack"
@@ -75,14 +75,14 @@ class ShopSelectPack:
 
     async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         bot.setData(c.from_user.id, ShopSelectPack.data, args[0])
-        bot.setData(c.from_user.id, F"{ShopSelectPack.type}", args[1])
+        bot.setData(c.from_user.id, f"{ShopSelectPack.type}", args[1])
         
-        areas = await Area.afilter(city_id=bot.getData(ShopSelectCity.data))
+        areas = await Area.afilter(city_id=bot.getData(c.from_user.id, ShopSelectCity.data))
         buttons = []
         
         if areas is not [] and areas is not None:
             for area in areas:
-                buttons.append(InlineKeyboardButton(f"{area.title}", f"{ShopSelectArea.data}_{area.id}"))
+                buttons.append([InlineKeyboardButton(f"{area.title}", f"{ShopSelectArea.data}_{area.id}")])
             await bot.sendMessageAsync(c.chat.id, "Выберите район:", buttons)
         else:
             bot.setData(c.from_user.id, ShopSelectArea.data, None)
@@ -100,15 +100,15 @@ class ShopSelectArea:
         await ShopSelectArea.BuyRequest(bot, c, p, args)
         
     async def BuyRequest(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
-        area = bot.getData(c.from_user.id, ShopSelectArea.data)
-        city = bot.getData(c.from_user.id, ShopSelectCity.data)
-        pack = bot.getData(c.from_user.id, ShopSelectPack.data)
+        area = await Area.afirst(id=bot.getData(c.from_user.id, ShopSelectArea.data))
+        city = await City.afirst(bot.getData(c.from_user.id, ShopSelectCity.data))
+        pack = await Pack.afirst(bot.getData(c.from_user.id, ShopSelectPack.data))
         packType = bot.getData(c.from_user.id, ShopSelectPack.type)
-        product = bot.getData(c.from_user.id, ShopSelectProduct.data)
+        product = await Product.afirst(bot.getData(c.from_user.id, ShopSelectProduct.data))
         
         #todo проверка на preordeer etc!!! await BuyPack(p, area, city, pack)
         buttons = [
-            InlineKeyboardButton("Подтвердить", f"{ShopBuyConfirm.data}_{area.id}_{city.id}_{pack.id}")
+            [InlineKeyboardButton("Подтвердить", f"{ShopBuyConfirm.data}_{area.id}_{city.id}_{pack.id}")]
         ]
         
         await bot.sendMessageAsync(c.chat.id, ShopSelectArea.GetBuyMessage(area, city, pack, packType, product), InlineKeyboardMarkup(buttons))

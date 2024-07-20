@@ -10,7 +10,11 @@ async def getAsync(url):
 
 async def postAsync(url, data, files=None):
     response = await client.post(url, data=data, files=files)
-    return response.json()
+    
+    result = response.json()
+    
+    print(result)
+    return result
 
 def post(url, data):
     response = requests.post(url, data=data)

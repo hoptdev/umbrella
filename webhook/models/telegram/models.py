@@ -152,7 +152,7 @@ class TelegramBot(models.Model):
 
     
     def setWebhook(self):
-        data = {'url': 'https://db09-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'}
+        data = {'url': 'https://52bb-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'}
         r = post(f'{self.getURL()}setWebhook', data)
         return r
     
