@@ -33,5 +33,8 @@ def RegisterActions():
         ShopView.data: ShopView,
         ShopProductInfo.data: ShopProductInfo,
         ShopSelectProduct.data: ShopSelectProduct,
+        ShopSelectPack.data: ShopSelectPack,
+        ShopSelectArea.data: ShopSelectArea,
+        ShopBuyConfirm.data: ShopBuyConfirm
     }
     return
