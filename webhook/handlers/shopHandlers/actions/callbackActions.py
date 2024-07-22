@@ -2,6 +2,8 @@ from webhook.models.telegram.updateModels import *
 from webhook.models.telegram.models import *
 from webhook.models.shop.shopModels import *
 from webhook.models.shop.userModels import *
+from webhook.handlers.paymentHandler.btcHelper import minimalUSD
+from webhook.models.payment.models import Wallet
 # callbackData example: my_data, data_test_arg1 etc.. 
 from ...paymentHandler.handler import BuyPackAsync
 
@@ -51,17 +53,19 @@ class ShopSelectProduct:
     data = "shop_selectProduct"
     role = Role.DEFAULT
 
-    async def AddressesExistsAsync(packId):
-        address = await Address.afirst(pack_id=packId, status=Status.ONSALE)
+    async def AddressesExistsAsync(packId, cityId):
+        address = await Address.afirst(pack_id=packId, city_id = cityId, status=Status.ONSALE)
         return address is not None 
 
     async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         packs = await Pack.afilter(product_id=args[0])
         bot.setData(c.from_user.id, ShopSelectProduct.data, args[0])
+        cityId = bot.getData(c.from_user.id, ShopSelectCity.data)
+        
         buttons = []
 
         for pack in packs:
-            packVisible = await ShopSelectProduct.AddressesExistsAsync(pack.id)
+            packVisible = await ShopSelectProduct.AddressesExistsAsync(pack.id, cityId)
             if packVisible:
                 buttons.append([InlineKeyboardButton(f"{pack.size} | Moment | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_moment")])
             elif pack.preorder:
@@ -100,15 +104,17 @@ class ShopSelectArea:
         await ShopSelectArea.BuyRequest(bot, c, p, args)
         
     async def BuyRequest(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
-        area = await Area.afirst(id=bot.getData(c.from_user.id, ShopSelectArea.data))
+        areaData = bot.getData(c.from_user.id, ShopSelectArea.data)
+        area = await Area.afirst(id=areaData) if areaData else None
         city = await City.afirst(bot.getData(c.from_user.id, ShopSelectCity.data))
         pack = await Pack.afirst(bot.getData(c.from_user.id, ShopSelectPack.data))
         packType = bot.getData(c.from_user.id, ShopSelectPack.type)
         product = await Product.afirst(bot.getData(c.from_user.id, ShopSelectProduct.data))
         
-        #todo проверка на preordeer etc!!! await BuyPack(p, area, city, pack)
+        preorder = packType is 'preorder'
+        #todo проверка на preordeer etc!!! 
         buttons = [
-            [InlineKeyboardButton("Подтвердить", f"{ShopBuyConfirm.data}_{area.id}_{city.id}_{pack.id}")]
+            [InlineKeyboardButton("Подтвердить", f"{ShopBuyConfirm.data}_{(area.id if area else '-1')}_{city.id}_{pack.id}_{preorder}")]
         ]
         
         await bot.sendMessageAsync(c.chat.id, ShopSelectArea.GetBuyMessage(area, city, pack, packType, product), InlineKeyboardMarkup(buttons))
@@ -121,6 +127,67 @@ class ShopBuyConfirm:
         area = await Area.afirst(id=args[0])
         city = await City.afirst(id=args[1])
         pack = await Pack.afirst(id=args[2])
+        preorder = args[3] is 'True'
         
-        result = await BuyPackAsync(p, area, city, pack)
-        await bot.sendMessageAsync(c.chat.id,  result) 
+        result = await BuyPackAsync(p, area, city, pack, preorder)
+        text = result[1]
+        
+        if result[0]:
+            coords = text.split()
+            buttons = [
+                [InlineKeyboardButton("Показать фото", f"{AddressPhotoView.data}_{result[2]}")]
+            ]
+            
+            await bot.sendLocation(c.chat.id, coords[0], coords[1], buttons)
+        else:
+            await bot.sendMessageAsync(c.chat.id, text) 
+        
+class AddressPhotoView:
+    data = "address_photoView"
+    role = Role.DEFAULT
+
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
+        pass
+    
+class PartnerHistoryView:
+    data = "partner_historyView"
+    role = Role.DEFAULT
+
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
+        orders = await Order.afilter(partner_id=p.id)
+        buttons = []
+        #todo pagination
+        for order in orders:
+            buttons.append([InlineKeyboardButton(f"{order.status}|{order.create_time}", f'{OrderInfoView.data}_{order.id}')])
+            
+        await bot.sendMessageAsync(c.chat.id, "История покупок:", buttons)
+            
+class OrderInfoView:
+    data = "order_InfoView"
+    role = Role.DEFAULT
+
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
+        order = await Order.afirst(id=args[0])
+        product = await Product.afirst(id=order.product_id)
+        pack = await Pack.afirst(id=order.pack_id)
+        address = await Address.afirst(id=order.address_id)
+        
+        coords = address.data.split()
+        text = f'Заказ #{order.id}\n\nТовар: {product.title} | {pack.size}\nСтоимость: {order.price}\nДата: {order.create_time}\nСтатус: {order.status}'
+        
+        await bot.sendMessageAsync(c.chat.id, text)
+        await bot.sendLocation(c.chat.id, coords[0], coords[1])
+
+class PaymentInfoView:
+    data = "payment_infoView"
+    role = Role.DEFAULT
+
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
+        wallets = await Wallet.afilter(partner_id=p.id)
+        
+        text = 'Кошельки для пополения:\n\n'
+        for wallet in wallets:
+            text += f'{wallet.title} - {wallet.publicKey}\n'
+        text += f"\nСистема автоматически обнаружит подтвержденное пополнение и пополнит баланс в USD по курсу на момент зачисления.\n\nСумма пополнения от {minimalUSD}$"
+        
+        await bot.sendMessageAsync(c.chat.id, text)

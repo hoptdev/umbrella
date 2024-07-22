@@ -84,14 +84,16 @@ class Address(models.Model):
 class PreOrderInfo(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
     pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
 
 class Order(models.Model):
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=64, choices=OrderStatus.choices, default=OrderStatus.WAIT)
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)

@@ -14,7 +14,7 @@ class WebhookConfig(AppConfig):
     def ready(self):
         from .handlers.courierHandlers.messageHandler import RegisterCommands, RegisterInputHandlers
         from .handlers.courierHandlers.callbackHandler import RegisterActions
-
+        from webhook.handlers.paymentHandler.handler import PaymentHandler
         from .handlers.shopHandlers.messageHandler import RegisterCommands as RegisterCommandsShop, RegisterInputHandlers as RegisterInputHandlersShop
         from .handlers.shopHandlers.callbackHandler import RegisterActions as RegisterActionsShop
         SetWebhooks()
@@ -25,3 +25,5 @@ class WebhookConfig(AppConfig):
         RegisterCommandsShop()
         RegisterActionsShop()
         RegisterInputHandlersShop()
+        
+        PaymentHandler.delay()

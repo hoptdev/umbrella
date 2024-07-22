@@ -35,6 +35,10 @@ def RegisterActions():
         ShopSelectProduct.data: ShopSelectProduct,
         ShopSelectPack.data: ShopSelectPack,
         ShopSelectArea.data: ShopSelectArea,
-        ShopBuyConfirm.data: ShopBuyConfirm
+        ShopBuyConfirm.data: ShopBuyConfirm,
+        AddressPhotoView.data: AddressPhotoView,
+        PartnerHistoryView.data: PartnerHistoryView,
+        OrderInfoView.data: OrderInfoView,
+        PaymentInfoView.data: PaymentInfoView
     }
     return

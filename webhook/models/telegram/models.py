@@ -117,6 +117,13 @@ class TelegramBot(models.Model):
     async def sendPhoto(self, data, files):
         return await self.sendPost("sendPhoto", data,files)
     
+    async def sendLocation(self, chatId, latitude, longitude, reply_markup=None):
+        if reply_markup is not None and isinstance(reply_markup, list):
+            reply_markup = InlineKeyboardMarkup(reply_markup)
+        
+        data = {'chat_id': chatId, 'latitude': latitude, 'longitude': longitude, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
+        return await self.sendPost("sendLocation", data)
+    
     async def sendMessageWithPhotoAsync(self, chatId, text, photoPath: list, reply_markup = None):
         import os
         if len(photoPath) <= 1:
