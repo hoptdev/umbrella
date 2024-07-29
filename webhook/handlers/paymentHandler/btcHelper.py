@@ -38,7 +38,7 @@ def check(privKey):
     info = getFullInfo(key, 'usd')
     balanceUSD = info[0]
 
-    if balanceUSD <= minimalUSD:
+    if float(balanceUSD) <= minimalUSD:
         return (False, balanceUSD)
     else:
         sendAll(key, info[1])

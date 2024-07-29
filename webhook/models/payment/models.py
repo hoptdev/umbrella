@@ -2,7 +2,8 @@ from django.db import models
 from ..decorator import async_model_decorator
 
 from ..shop.shopModels import Partner
-from ...handlers.paymentHandler.btcHelper import *
+from ...handlers.paymentHandler.btcHelper import getKey
+from ...handlers.paymentHandler.ltcHelper import createFullKey
 
 class PaymentType(models.TextChoices):
     PAYMENT = 'PAYMENT', 'Payment'
@@ -34,5 +35,10 @@ class Wallet(models.Model):
             self.privateKey = data[1]
 
             await self.asave()
+        elif type is Cryptocurrency.LTC:
+            data = createFullKey(partner.id)
+            self.publicKey = data[0]
+            self.privateKey = data[1]
+            await self.asave()
         else:
-            pass #todo ltc
+            pass

@@ -8,6 +8,15 @@ import aiofiles
 import mimetypes
 from typing import Union
 
+class Data:
+    def __init__(self, inputs, nextAction=None):
+        self.nextAction = nextAction
+        self.inputs = inputs
+    def setAction(self, action):
+        self.nextAction = action
+    def removeAction(self):
+        self.nextAction = None
+
 class InlineKeyboardButton:
     def __init__(self, text, callback_data):
         self.text = text
@@ -58,6 +67,18 @@ class TelegramBot(models.Model):
 
     userData = {}
     
+    def removeData(self, tgId, nameData):
+        if not tgId in self.userData:
+            self.userData[tgId] = Data({})
+        
+        del self.userData[tgId].inputs[nameData]
+    
+    def getFullData(self, tgId) -> Data:
+        if not tgId in self.userData:
+            self.userData[tgId] = Data({})
+        
+        return self.userData[tgId]
+    
     def getData(self, tgId, nameData):
         if not tgId in self.userData:
             self.userData[tgId] = Data({})
@@ -91,6 +112,9 @@ class TelegramBot(models.Model):
     def getURL(self):
         return f'https://api.telegram.org/bot{self.token}/'
 
+    async def getFileAsync(self, fileId):
+        return await self.sendPost("getFile", fileId)
+
     async def sendGet(self, method):
         return await getAsync(f'{self.getURL()}{method}')
     
@@ -111,6 +135,11 @@ class TelegramBot(models.Model):
         data = {'chat_id': chatId, 'text': text, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
         return await self.sendPost("sendMessage", data)
     
+    async def getFileUrlAsync(self, fileId):
+        data = {'file_id': fileId}
+        result = await self.sendPost("getfile", data)
+        return f'https://api.telegram.org/file/bot{self.token}/{result['result']['file_path']}'
+    
     async def sendMediaGroup(self, data, files):
         return await self.sendPost("sendMediaGroup", data, files)
     
@@ -124,6 +153,15 @@ class TelegramBot(models.Model):
         data = {'chat_id': chatId, 'latitude': latitude, 'longitude': longitude, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
         return await self.sendPost("sendLocation", data)
     
+    async def sendMessageWithFileIdAsync(self, chatId, text, fileId, reply_markup = None):
+        files = {'photo': fileId}
+        data = {'chat_id': chatId, 'caption': text, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
+        return await self.sendPost("sendPhoto", data, files)
+    
+    async def deleteMessageAsync(self, chatId, messageId):
+        data = {'chat_id': chatId, 'message_id': messageId}
+        return await self.sendPost("deleteMessage", data)
+    
     async def sendMessageWithPhotoAsync(self, chatId, text, photoPath: list, reply_markup = None):
         import os
         if len(photoPath) <= 1:
@@ -132,7 +170,7 @@ class TelegramBot(models.Model):
 
             files = {'photo': open(photo, 'rb')}
             data = {'chat_id': chatId, 'caption': text, 'reply_markup': reply_markup.toJson() if reply_markup is not None else None}
-            return await self.sendPhoto("sendPhoto", data, files)
+            return await self.sendPhoto(data, files)
         else:
             media = []
             files = {}
@@ -159,15 +197,6 @@ class TelegramBot(models.Model):
 
     
     def setWebhook(self):
-        data = {'url': 'https://52bb-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'}
+        data = {'url': 'https://5cb6-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'} #todo in env
         r = post(f'{self.getURL()}setWebhook', data)
         return r
-    
-class Data:
-    def __init__(self, inputs, nextAction=None):
-        self.nextAction = nextAction
-        self.inputs = inputs
-    def setAction(self, action):
-        self.nextAction = action
-    def removeAction(self):
-        self.nextAction = None

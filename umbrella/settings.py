@@ -34,6 +34,7 @@ APPEND_SLASH=False
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -71,11 +72,13 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'umbrella.wsgi.application'
-
+ASGI_APPLICATION = 'umbrella.asgi.application'
+DJANGO_ALLOW_ASYNC_UNSAFE = True
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+
 
 DATABASES = {
     'default': {

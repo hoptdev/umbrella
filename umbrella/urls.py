@@ -20,5 +20,5 @@ from webhook import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('webhook/<str:botId>', views.webhook)
+    path('webhook/<str:botId>', views.webhook )
 ]

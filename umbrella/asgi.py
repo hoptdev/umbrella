@@ -11,6 +11,16 @@ import os
 
 from django.core.asgi import get_asgi_application
 
+def SetWebhooks():
+    from webhook.models.telegram.models import TelegramBot
+    bots = TelegramBot.objects.all()
+
+    for bot in bots:
+        print(f'set webhook for {bot.id}')
+        bot.setWebhook()
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'umbrella.settings')
 
 application = get_asgi_application()
+
+SetWebhooks()

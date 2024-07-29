@@ -12,10 +12,9 @@ from .handlers.courierHandlers.callbackHandler import HandleCallback as CourierH
 
 from .handlers.shopHandlers.messageHandler import HandleMessage as ShopHandlerMessage
 from .handlers.shopHandlers.callbackHandler import HandleCallback as ShopHandleCallback
+from asgiref.sync import async_to_sync, sync_to_async
 
 async def HandleUpdate(body, botId):
-    print(body) #todo dev
-
     bot = await TelegramBot.objects.aget(id=botId)
     update = Update(body)
 
@@ -34,13 +33,17 @@ async def HandleUpdate(body, botId):
 @app.task(ignore_result=True)
 def RunHandleUpdate(body, botId):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run((HandleUpdate(body, botId)))
+    asyncio.get_event_loop().run_until_complete(HandleUpdate(body, botId))
 
+@sync_to_async
 @csrf_exempt
-def webhook(request, botId):
+@async_to_sync
+async def webhook(request, botId):
     try:
         if request.method == "POST":
-            RunHandleUpdate(request.body, botId)
+            print(request.body)
+            await HandleUpdate(request.body, botId)
+            #RunHandleUpdate(request.body, botId)
             #RunHandleUpdate.delay(request.body, botId)
         return HttpResponse("OK")
     except Exception as e:

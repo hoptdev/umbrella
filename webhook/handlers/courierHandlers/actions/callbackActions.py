@@ -24,7 +24,7 @@ class AddressSelectCity:
     async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
         buttons = []
 
-        bot.setData(c.from_user.id, "AddressSelectCity", args[0])
+        bot.setData(c.from_user.id, AddressSelectCity.data, args[0])
         city = await City.aget(id=args[0])
 
         areas = await Area.afilter(city_id=city.id)
@@ -50,7 +50,7 @@ class AddressSelectArea:
     async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
         buttons = []
 
-        bot.setData(c.from_user.id, "AddressSelectArea", args[0])
+        bot.setData(c.from_user.id, AddressSelectArea.data, args[0])
         
         products = await Product.afilter(shop_id=bot.shop_id)
         for product in products:
@@ -67,7 +67,7 @@ class AddressSelectProduct:
     async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
         buttons = []
 
-        bot.setData(c.from_user.id, "AddressSelectProduct", args[0])
+        bot.setData(c.from_user.id, AddressSelectProduct.data, args[0])
 
         packs = await Pack.afilter(product_id=args[0])
 
@@ -83,7 +83,7 @@ class AddressSelectPack:
     async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
         buttons = []
 
-        bot.setData(c.from_user.id, "AddressSelectPack", args[0])
+        bot.setData(c.from_user.id, AddressSelectPack.data, args[0])
         
         await AddressSelectPack.SendInput(bot, c, args)
 
@@ -92,12 +92,12 @@ class AddressSelectPack:
 
         bot.setNextHandler(c.from_user.id, AddressHandler.name)
 
-        city = await City.aget(id=bot.getData(c.from_user.id, "AddressSelectCity")) 
-        area = await Area.afirst(id=bot.getData(c.from_user.id, "AddressSelectArea"))
-        product = await Product.aget(id=bot.getData(c.from_user.id, "AddressSelectProduct"))
-        pack = await Pack.aget(id=bot.getData(c.from_user.id, "AddressSelectPack"))
+        city = await City.aget(id=bot.getData(c.from_user.id, AddressSelectCity.data)) 
+        area = await Area.afirst(id=bot.getData(c.from_user.id, AddressSelectArea.data))
+        product = await Product.aget(id=bot.getData(c.from_user.id, AddressSelectProduct.data))
+        pack = await Pack.aget(id=bot.getData(c.from_user.id, AddressSelectPack.data))
 
-        await bot.sendMessageAsync(c.chat.id, f"Город: {city.title}\nРайон: {area}\nТовар: {product.title} | {pack.size}\n\nВведите адрес.\n\n Для массового ввода используйте два перевода строки. Пример:\n\"address1\n\naddress2\"")
+        await bot.sendMessageAsync(c.chat.id, f"Город: {city.title}\nРайон: {area}\nТовар: {product.title} | {pack.size}\n\nВведите адрес.")
 
 class AddressSendInput:
     data = "address_sendInput"
@@ -105,3 +105,17 @@ class AddressSendInput:
 
     async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
         await AddressSelectPack.SendInput(bot, c, args)
+        
+class AddressReset:
+    data = "address_reset"
+    role = Role.COURIER
+
+    async def Reset(bot: TelegramBot, tgId):
+        for key in list(bot.getFullData(tgId).inputs.keys()):
+            if key.startswith('address_'):
+                bot.removeData(tgId, key)
+
+    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+        await AddressReset.Reset(bot, c.chat.id)
+        await bot.deleteMessageAsync(c.chat.id, c.message.message_id)
+        

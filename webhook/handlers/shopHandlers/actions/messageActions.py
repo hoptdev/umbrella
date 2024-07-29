@@ -3,7 +3,7 @@ from webhook.models.telegram.models import *
 from webhook.models.shop.shopModels import *
 from webhook.models.shop.userModels import *
 
-from .callbackActions import ShopView, PartnerHistoryView
+from .callbackActions import ShopView, PartnerHistoryView, PaymentInfoView
 
 class StartCommand:
     command = "/start"
@@ -14,7 +14,7 @@ class StartCommand:
     replyButtons = ReplyKeyboardMarkup([[KeyboardButton(replyCommand)]], True)
     buttons = InlineKeyboardMarkup(
         [[InlineKeyboardButton("🛒 Магазин", ShopView.data)],
-         [InlineKeyboardButton("💳 Пополнение", ShopView.data), InlineKeyboardButton("🛍 Покупки", PartnerHistoryView.data)]
+         [InlineKeyboardButton("💳 Пополнение", PaymentInfoView.data), InlineKeyboardButton("🛍 Покупки", PartnerHistoryView.data)]
          ]
         )
 
@@ -26,7 +26,7 @@ class StartCommand:
 
 class MenuStart:
     command = StartCommand.replyCommand
-    role = Role.DEFAULT
-
     async def Action(bot: TelegramBot, msg: Message, p: Partner):
         await StartCommand.SendProfile(bot, msg, p)
+    role = Role.DEFAULT
+  

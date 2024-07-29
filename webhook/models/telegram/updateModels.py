@@ -24,6 +24,16 @@ class Chat:
     def __init__(self, j):
         self.__dict__ = json.loads(j)
 
+class Location:
+    def __init__(self, latitude, longitude):
+        self.latitude = latitude
+        self.longitude = longitude
+    
+    def __init__(self, j):
+        data = json.loads(j)
+        self.__dict__ = data
+
+
 class Message:
     def __init__(self, message_id, from_user, chat, date, text, entities=None):
         self.message_id = message_id
@@ -38,6 +48,7 @@ class Message:
         self.__dict__ = data
         self.from_user = User(json.dumps(data["from"]))
         self.chat = Chat(json.dumps(self.chat))
+        self.location = Location(json.dumps(data["location"])) if data.get("location") else None
 
     def __setstate__(self, state):
         self.from_user = state['from']

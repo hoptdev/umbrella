@@ -63,7 +63,7 @@ class Partner(models.Model):
         wallet = await Wallet.afirst(partner_id=self.id)
         if wallet is None:
             await Wallet().createForPartnerAsync(self, Cryptocurrency.BTC)
-            #todo LTC
+            await Wallet().createForPartnerAsync(self, Cryptocurrency.LTC)
 
 @async_model_decorator
 class Area(models.Model):
@@ -77,17 +77,13 @@ class Address(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
     fromPartner = models.ForeignKey(Partner, on_delete=models.CASCADE)
-    data = models.CharField(max_length=2048)
+    location = models.CharField(max_length=128, null=True)
+    file = models.ImageField(upload_to='uploadsAddresses/', null=True)
+    data = models.CharField(max_length=2048, null=True)
     status = models.CharField(max_length=64, choices=Status.choices, default=Status.ONSALE)
     pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
-
-class PreOrderInfo(models.Model):
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
-    area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
-    partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
-    pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
-    active = models.BooleanField(default=True)
-
+    
+@async_model_decorator
 class Order(models.Model):
     address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=64, choices=OrderStatus.choices, default=OrderStatus.WAIT)
@@ -98,3 +94,13 @@ class Order(models.Model):
     area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     create_time = models.DateTimeField(auto_now_add=True)
+    
+@async_model_decorator
+class PreOrderInfo(models.Model):
+    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True)
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
+    pack = models.ForeignKey(Pack, on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE)

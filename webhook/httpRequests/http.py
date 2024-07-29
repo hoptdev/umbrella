@@ -6,16 +6,25 @@ client = httpx.AsyncClient(limits=limits, verify=False)
 
 async def getAsync(url):
     response = await client.get(url)
-    return response.json()
+    result = response.json()
+    
+    return result
 
 async def postAsync(url, data, files=None):
     response = await client.post(url, data=data, files=files)
     
     result = response.json()
     
-    print(result)
+    #print(result)
     return result
+
+def sendRpc(url, auth, data):
+    response = requests.post(url, auth=auth, data=data)
+    return response
 
 def post(url, data):
     response = requests.post(url, data=data)
-    return response.json()
+    result = response.json()
+    
+    #print(result)
+    return result

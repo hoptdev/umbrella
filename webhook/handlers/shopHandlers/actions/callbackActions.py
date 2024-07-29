@@ -84,7 +84,7 @@ class ShopSelectPack:
         areas = await Area.afilter(city_id=bot.getData(c.from_user.id, ShopSelectCity.data))
         buttons = []
         
-        if areas is not [] and areas is not None:
+        if areas != [] and areas is not None:
             for area in areas:
                 buttons.append([InlineKeyboardButton(f"{area.title}", f"{ShopSelectArea.data}_{area.id}")])
             await bot.sendMessageAsync(c.chat.id, "Выберите район:", buttons)
@@ -106,13 +106,13 @@ class ShopSelectArea:
     async def BuyRequest(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         areaData = bot.getData(c.from_user.id, ShopSelectArea.data)
         area = await Area.afirst(id=areaData) if areaData else None
-        city = await City.afirst(bot.getData(c.from_user.id, ShopSelectCity.data))
-        pack = await Pack.afirst(bot.getData(c.from_user.id, ShopSelectPack.data))
+        city = await City.afirst(id=bot.getData(c.from_user.id, ShopSelectCity.data))
+        pack = await Pack.afirst(id=bot.getData(c.from_user.id, ShopSelectPack.data))
         packType = bot.getData(c.from_user.id, ShopSelectPack.type)
-        product = await Product.afirst(bot.getData(c.from_user.id, ShopSelectProduct.data))
+        product = await Product.afirst(id=bot.getData(c.from_user.id, ShopSelectProduct.data))
         
-        preorder = packType is 'preorder'
-        #todo проверка на preordeer etc!!! 
+        preorder = packType == 'preorder'
+
         buttons = [
             [InlineKeyboardButton("Подтвердить", f"{ShopBuyConfirm.data}_{(area.id if area else '-1')}_{city.id}_{pack.id}_{preorder}")]
         ]
@@ -127,7 +127,7 @@ class ShopBuyConfirm:
         area = await Area.afirst(id=args[0])
         city = await City.afirst(id=args[1])
         pack = await Pack.afirst(id=args[2])
-        preorder = args[3] is 'True'
+        preorder = args[3] == 'True'
         
         result = await BuyPackAsync(p, area, city, pack, preorder)
         text = result[1]
@@ -172,11 +172,19 @@ class OrderInfoView:
         pack = await Pack.afirst(id=order.pack_id)
         address = await Address.afirst(id=order.address_id)
         
-        coords = address.data.split()
-        text = f'Заказ #{order.id}\n\nТовар: {product.title} | {pack.size}\nСтоимость: {order.price}\nДата: {order.create_time}\nСтатус: {order.status}'
         
+        text = f'Заказ #{order.id}\n\nТовар: {product.title} | {pack.size}\nСтоимость: {order.price}\nДата: {order.create_time}\nСтатус: {order.status}'
         await bot.sendMessageAsync(c.chat.id, text)
-        await bot.sendLocation(c.chat.id, coords[0], coords[1])
+        
+        if order.status == OrderStatus.COMPLETED and address:
+            if address.location:
+                coords = address.location.split()
+                await bot.sendLocation(c.chat.id, coords[0], coords[1])
+                if address.data:
+                    if address.file:
+                        await bot.sendMessageWithPhotoAsync(c.chat.id, address.data, [address.file.url]) 
+                    else:
+                        await bot.sendMessageAsync(c.chat.id, address.data)
 
 class PaymentInfoView:
     data = "payment_infoView"
