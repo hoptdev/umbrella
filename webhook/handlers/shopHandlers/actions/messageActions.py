@@ -1,12 +1,13 @@
-from webhook.models.telegram.updateModels import *
-from webhook.models.telegram.models import *
-from webhook.models.shop.shopModels import *
-from webhook.models.shop.userModels import *
-
+from webhook.models.telegram.updateModels import Message
+from webhook.models.telegram.models import TelegramBot, InlineKeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, KeyboardButton, Type
+from webhook.models.shop.shopModels import Partner
+from webhook.models.shop.userModels import Role
+from webhook.models.decorator import register_command
 from .callbackActions import ShopView, PartnerHistoryView, PaymentInfoView
 
+@register_command(Type.ShopBot)
 class StartCommand:
-    command = "/start"
+    data = "/start"
     replyCommand = "ℹ️ Меню"
 
     role = Role.DEFAULT
@@ -24,9 +25,12 @@ class StartCommand:
     async def Action(bot: TelegramBot, msg: Message, p: Partner):
         await bot.sendMessageAsync(msg.chat.id, f"🛒 Приветствие", StartCommand.replyButtons) 
 
+@register_command(Type.ShopBot)
 class MenuStart:
-    command = StartCommand.replyCommand
+    data = StartCommand.replyCommand
+    role = Role.DEFAULT
+    
     async def Action(bot: TelegramBot, msg: Message, p: Partner):
         await StartCommand.SendProfile(bot, msg, p)
-    role = Role.DEFAULT
+    
   

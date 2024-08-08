@@ -1,9 +1,10 @@
-import time
+import time, os
 from ...httpRequests.http import getAsync
+
 
 URL = 'https://bitpay.com/rates'
 CACHE = {} 
-CACHE_EXPIRATION_TIME = 60 * 5 #todo -> env
+CACHE_EXPIRATION_TIME = int(os.getenv('CACHE_EXPIRATION_TIME'))
 
 async def calculateAsync(fromC, toC, amount):
     key = f'{fromC}_{toC}'

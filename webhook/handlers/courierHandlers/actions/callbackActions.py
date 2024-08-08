@@ -1,14 +1,16 @@
-from webhook.models.telegram.updateModels import *
-from webhook.models.telegram.models import *
-from webhook.models.shop.shopModels import *
-from webhook.models.shop.userModels import *
+from webhook.models.telegram.updateModels import CallbackQuery
+from webhook.models.telegram.models import Type, TelegramBot, InlineKeyboardButton, InlineKeyboardMarkup
+from webhook.models.shop.shopModels import Shop, City, Area, Product, Pack, Partner
+from webhook.models.shop.userModels import Role
 # callbackData example: my_data, data_test_arg1 etc.. 
+from webhook.models.decorator import register_callback
 
+@register_callback(Type.CourierBot)
 class AddressAdd:
     data = "address_add"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, callback: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, callback: CallbackQuery, p: Partner, args=None):
         buttons = []
         shop = await Shop.afirst(id=bot.shop_id)
 
@@ -17,11 +19,12 @@ class AddressAdd:
         
         await bot.sendMessageAsync(callback.chat.id, "Выберите город:", InlineKeyboardMarkup(buttons)) 
 
+@register_callback(Type.CourierBot)
 class AddressSelectCity:
     data = "address_selectCity"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         buttons = []
 
         bot.setData(c.from_user.id, AddressSelectCity.data, args[0])
@@ -43,11 +46,12 @@ class AddressSelectCity:
 
             await bot.sendMessageAsync(c.chat.id, f"Выберите товар:", InlineKeyboardMarkup(buttons))
 
+@register_callback(Type.CourierBot)
 class AddressSelectArea:
     data = "address_selectArea"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         buttons = []
 
         bot.setData(c.from_user.id, AddressSelectArea.data, args[0])
@@ -60,11 +64,12 @@ class AddressSelectArea:
         
         await bot.sendMessageAsync(c.chat.id, f"Выберите товар:", InlineKeyboardMarkup(buttons))
 
+@register_callback(Type.CourierBot)
 class AddressSelectProduct:
     data = "address_selectProduct"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner,args=None):
         buttons = []
 
         bot.setData(c.from_user.id, AddressSelectProduct.data, args[0])
@@ -76,11 +81,12 @@ class AddressSelectProduct:
         
         await bot.sendMessageAsync(c.chat.id, f"Выберите фасовку:", InlineKeyboardMarkup(buttons))
 
+@register_callback(Type.CourierBot)
 class AddressSelectPack:
     data = "address_selectPack"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         buttons = []
 
         bot.setData(c.from_user.id, AddressSelectPack.data, args[0])
@@ -90,7 +96,7 @@ class AddressSelectPack:
     async def SendInput(bot: TelegramBot, c: CallbackQuery, args=None):
         from .inputActions import AddressHandler
 
-        bot.setNextHandler(c.from_user.id, AddressHandler.name)
+        bot.setNextHandler(c.from_user.id, AddressHandler.data)
 
         city = await City.aget(id=bot.getData(c.from_user.id, AddressSelectCity.data)) 
         area = await Area.afirst(id=bot.getData(c.from_user.id, AddressSelectArea.data))
@@ -99,13 +105,15 @@ class AddressSelectPack:
 
         await bot.sendMessageAsync(c.chat.id, f"Город: {city.title}\nРайон: {area}\nТовар: {product.title} | {pack.size}\n\nВведите адрес.")
 
+@register_callback(Type.CourierBot)
 class AddressSendInput:
     data = "address_sendInput"
     role = Role.COURIER
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         await AddressSelectPack.SendInput(bot, c, args)
-        
+
+@register_callback(Type.CourierBot)     
 class AddressReset:
     data = "address_reset"
     role = Role.COURIER
@@ -115,7 +123,7 @@ class AddressReset:
             if key.startswith('address_'):
                 bot.removeData(tgId, key)
 
-    async def Action(bot: TelegramBot, c: CallbackQuery, args=None):
+    async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         await AddressReset.Reset(bot, c.chat.id)
         await bot.deleteMessageAsync(c.chat.id, c.message.message_id)
         

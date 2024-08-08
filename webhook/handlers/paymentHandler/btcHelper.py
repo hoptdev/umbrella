@@ -1,9 +1,10 @@
 from bit import *
+import os
 from bit.network import get_fee, get_fee_cached
 
-confirmations = 1 #todo -> env
-minimalUSD = 10
-walletMain = 'mtMHJaWoVnQCxhjVFFbdHHB52WaZRecHPC'
+confirmations = int(os.getenv('CONFIRMATIONS'))
+minimalUSD = int(os.getenv('MINIMAL_USD'))
+walletMain = os.getenv('BTC_WALLET')
 
 def getKey():
     key = PrivateKeyTestnet()

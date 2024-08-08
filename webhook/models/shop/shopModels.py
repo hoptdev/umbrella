@@ -1,5 +1,5 @@
 from django.db import models
-from .userModels import *
+from .userModels import Role, ROLE_LEVELS
 from ..decorator import async_model_decorator
 
 class Status(models.TextChoices):

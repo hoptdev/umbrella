@@ -1,20 +1,21 @@
 import urllib.request
-from webhook.models.telegram.updateModels import *
-from webhook.models.telegram.models import *
-from webhook.models.shop.shopModels import *
-from webhook.models.shop.userModels import *
+from webhook.models.telegram.updateModels import Message
+from webhook.models.telegram.models import Type, TelegramBot, InlineKeyboardButton, InlineKeyboardMarkup
+from webhook.models.shop.shopModels import Partner, City, Area, Address, Pack, PreOrderInfo, Order, OrderStatus, Status
+from webhook.models.shop.userModels import Role
 import re
 import os
 import urllib
 from asgiref.sync import sync_to_async
 from django.core.files import File 
-
+from webhook.models.decorator import register_input
 from .callbackActions import AddressSelectCity, AddressSelectArea, AddressSelectPack, AddressReset
 
+@register_input(Type.CourierBot)
 class AddressHandler:
     from .callbackActions import AddressSendInput
 
-    name = "AddressHandler"
+    data = "AddressHandler"
     dataLocation = "address_LocationData"
     role = Role.COURIER
     
@@ -69,7 +70,7 @@ class AddressHandler:
         data = f'{msg.location.latitude} {msg.location.longitude}'
         
         bot.setData(msg.from_user.id, AddressHandler.dataLocation, data)
-        bot.setNextHandler(msg.from_user.id, AddressHandler.name)
+        bot.setNextHandler(msg.from_user.id, AddressHandler.data)
         
         await bot.sendMessageAsync(msg.chat.id, "Локация сохранена. Введите информацию о кладе.") 
     
@@ -100,7 +101,7 @@ class AddressHandler:
         return
             
         
-    async def Action(bot: TelegramBot, msg: Message):
+    async def Action(bot: TelegramBot, msg: Message, p : Partner):
         if msg.location != None:
             await AddressHandler.ParseLocation(bot, msg)
         else:

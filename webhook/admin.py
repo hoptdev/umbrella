@@ -1,10 +1,8 @@
 from django.contrib import admin
 from .models.telegram.models import TelegramBot
-from .models.shop.shopModels import *
+from .models.shop.shopModels import Product, Pack, City, Shop, Partner, Area, Address, PreOrderInfo, Order
 
-# Register your models here.
 admin.site.register(TelegramBot)
-
 admin.site.register(Product)
 admin.site.register(Pack)
 admin.site.register(City)

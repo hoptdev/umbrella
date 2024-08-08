@@ -14,8 +14,6 @@ async def postAsync(url, data, files=None):
     response = await client.post(url, data=data, files=files)
     
     result = response.json()
-    
-    #print(result)
     return result
 
 def sendRpc(url, auth, data):
@@ -25,6 +23,4 @@ def sendRpc(url, auth, data):
 def post(url, data):
     response = requests.post(url, data=data)
     result = response.json()
-    
-    #print(result)
     return result

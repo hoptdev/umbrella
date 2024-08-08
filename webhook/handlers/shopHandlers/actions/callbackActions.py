@@ -1,12 +1,14 @@
-from webhook.models.telegram.updateModels import *
-from webhook.models.telegram.models import *
-from webhook.models.shop.shopModels import *
-from webhook.models.shop.userModels import *
+from webhook.models.telegram.updateModels import CallbackQuery
+from webhook.models.telegram.models import Type, TelegramBot, InlineKeyboardButton, InlineKeyboardMarkup
+from webhook.models.shop.shopModels import Shop, City, Area, Product, Pack, Partner, Status, Order, OrderStatus, Address
+from webhook.models.shop.userModels import Role
 from webhook.handlers.paymentHandler.btcHelper import minimalUSD
 from webhook.models.payment.models import Wallet
 # callbackData example: my_data, data_test_arg1 etc.. 
 from ...paymentHandler.handler import BuyPackAsync
+from webhook.models.decorator import register_callback
 
+@register_callback(Type.ShopBot)
 class ShopView:
     data = "shop_view"
     role = Role.DEFAULT
@@ -20,6 +22,7 @@ class ShopView:
         
         await bot.sendMessageAsync(callback.chat.id, "🧾 Start order\n\nВыберите, пожалуйста, в каком городе вы хотите получить заказ.", InlineKeyboardMarkup(buttons))  #todo: change -> delete + send
 
+@register_callback(Type.ShopBot)
 class ShopSelectCity:
     data = "shop_selectCity"
     role = Role.DEFAULT
@@ -36,6 +39,7 @@ class ShopSelectCity:
 
         await bot.sendMessageAsync(c.chat.id, "🧾 Select product\n\nВыберите, пожалуйста, товар, который желаете приобрести:", InlineKeyboardMarkup(buttons)) 
 
+@register_callback(Type.ShopBot)
 class ShopProductInfo:
     data = "shop_productInfo"
     role = Role.DEFAULT
@@ -49,6 +53,7 @@ class ShopProductInfo:
 
         await bot.sendMessageWithPhotoAsync(c.chat.id, product.description, [product.photo1.url, product.photo2.url]) 
 
+@register_callback(Type.ShopBot)
 class ShopSelectProduct:
     data = "shop_selectProduct"
     role = Role.DEFAULT
@@ -72,6 +77,7 @@ class ShopSelectProduct:
                 buttons.append([InlineKeyboardButton(f"{pack.size} | PreOrder | {pack.price}$", f"{ShopSelectPack.data}_{pack.id}_preorder")])
         await bot.sendMessageAsync(c.chat.id, "Выберите фасовку:", InlineKeyboardMarkup(buttons)) 
 
+@register_callback(Type.ShopBot)
 class ShopSelectPack:
     data = "shop_selectPack"
     type = "shop_selectPackType"
@@ -91,7 +97,8 @@ class ShopSelectPack:
         else:
             bot.setData(c.from_user.id, ShopSelectArea.data, None)
             await ShopSelectArea.BuyRequest(bot, c, args)
-                
+
+@register_callback(Type.ShopBot)            
 class ShopSelectArea:
     data = "shop_selectArea"
     role = Role.DEFAULT
@@ -118,7 +125,8 @@ class ShopSelectArea:
         ]
         
         await bot.sendMessageAsync(c.chat.id, ShopSelectArea.GetBuyMessage(area, city, pack, packType, product), InlineKeyboardMarkup(buttons))
-                
+    
+@register_callback(Type.ShopBot)          
 class ShopBuyConfirm:
     data = "shop_buyConfirm"
     role = Role.DEFAULT
@@ -141,14 +149,16 @@ class ShopBuyConfirm:
             await bot.sendLocation(c.chat.id, coords[0], coords[1], buttons)
         else:
             await bot.sendMessageAsync(c.chat.id, text) 
-        
+
+@register_callback(Type.ShopBot)   
 class AddressPhotoView:
     data = "address_photoView"
     role = Role.DEFAULT
 
     async def Action(bot: TelegramBot, c: CallbackQuery, p: Partner, args=None):
         pass
-    
+
+@register_callback(Type.ShopBot)
 class PartnerHistoryView:
     data = "partner_historyView"
     role = Role.DEFAULT
@@ -161,7 +171,8 @@ class PartnerHistoryView:
             buttons.append([InlineKeyboardButton(f"{order.status}|{order.create_time}", f'{OrderInfoView.data}_{order.id}')])
             
         await bot.sendMessageAsync(c.chat.id, "История покупок:", buttons)
-            
+
+@register_callback(Type.ShopBot)        
 class OrderInfoView:
     data = "order_InfoView"
     role = Role.DEFAULT
@@ -186,6 +197,7 @@ class OrderInfoView:
                     else:
                         await bot.sendMessageAsync(c.chat.id, address.data)
 
+@register_callback(Type.ShopBot)
 class PaymentInfoView:
     data = "payment_infoView"
     role = Role.DEFAULT

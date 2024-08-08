@@ -1,12 +1,7 @@
 from django.db import models
 from webhook.httpRequests.http import getAsync, postAsync, post
-import json
+import json, os
 from ..shop.shopModels import Shop
-from .updateModels import *
-from json import JSONEncoder
-import aiofiles
-import mimetypes
-from typing import Union
 
 class Data:
     def __init__(self, inputs, nextAction=None):
@@ -197,6 +192,6 @@ class TelegramBot(models.Model):
 
     
     def setWebhook(self):
-        data = {'url': 'https://5cb6-31-28-113-222.ngrok-free.app' + f'/webhook/{self.id}'} #todo in env
+        data = {'url': os.getenv('WEBHOOK_URL') + f'/webhook/{self.id}'} #todo in env
         r = post(f'{self.getURL()}setWebhook', data)
         return r

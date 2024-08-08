@@ -16,3 +16,27 @@ def async_model_decorator(cls):
     cls.aget = aget
 
     return cls
+
+def register_callback(botType):
+    from ..handlers.callbackHandler import callbackActions
+    def decorator(cls):
+        return register(botType, cls, callbackActions)
+    return decorator
+
+def register_command(botType):
+    from ..handlers.messageHandler import commandActions
+    def decorator(cls):
+        return register(botType, cls, commandActions)
+    return decorator
+
+def register_input(botType):
+    from ..handlers.messageHandler import inputActions 
+    def decorator(cls):
+        return register(botType, cls, inputActions)
+    return decorator
+
+def register(botType, cls, dictionary : dict):
+    if not dictionary.get(botType):
+        dictionary[botType] = {}
+    dictionary[botType][cls.data] = cls
+    return cls

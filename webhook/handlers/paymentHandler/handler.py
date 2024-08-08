@@ -7,14 +7,14 @@ from umbrella.celery import app
 import asyncio
 from asgiref.sync import async_to_sync
 import decimal
-
+import os
 from .ltcHelper import getAllBalance, sendAll
 from .rateHelper import getUSDfromLTCAsync
 
 lock = asyncio.Lock()
 
 
-LTC_MAINWALLET = 'tltc1qr6942famx8qtzplq67wkcesvnvfx3d700gelfl' #todo -> env
+LTC_MAINWALLET = os.getenv('LTC_WALLET')
 
 async def Process():
     while True:
@@ -23,7 +23,7 @@ async def Process():
             
             async for wallet in Wallet.objects.all():
                 if wallet.title == Cryptocurrency.BTC:
-                    info = check(wallet.privateKey) #todo разобраться с комсой
+                    info = check(wallet.privateKey) 
                     if info[0]:
                         partner = await Partner.afirst(id=wallet.partner_id)
                         partner.balance += info[1]
